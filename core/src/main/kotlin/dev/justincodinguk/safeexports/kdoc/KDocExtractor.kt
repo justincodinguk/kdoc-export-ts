@@ -41,48 +41,67 @@ class KDocExtractor(
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val symbols = resolver.getSymbolsWithAnnotation("kotlin.js.JsExport")
         symbols.forEach { declaration ->
-            if (declaration !is KSClassDeclaration &&
-                declaration !is KSPropertyDeclaration &&
-                declaration !is KSFunctionDeclaration) return@forEach
-            val classFqName = declaration.simpleName.asString()
-            declaration.docString?.let { kDocMap[classFqName] = it }
-            if(declaration is KSClassDeclaration) {
-                declaration.getDeclaredProperties().forEach { prop ->
-                    if(prop.annotations.any { it.shortName.asString() == "Ignore" }) return@forEach
-                    prop.docString?.let { kdoc ->
-                        kDocMap["$classFqName.${prop.simpleName.asString()}"] = kdoc
-                    }
-                }
-                declaration.getDeclaredFunctions().forEach { function ->
-                    if(function.annotations.any { it.shortName.asString() == "Ignore" }) return@forEach
-                    function.docString?.let { kdoc ->
-                        kDocMap["$classFqName.${function.simpleName.asString()}"] = kdoc
-                    }
-                }
+            when (declaration) {
+                is KSClassDeclaration -> processClassDeclarationTransitively(declaration)
+                is KSPropertyDeclaration -> processPropertyDeclaration(declaration, null)
+                is KSFunctionDeclaration -> processFunctionDeclaration(declaration, null)
             }
-        }
-
-        val jsNameSymbols = resolver.getSymbolsWithAnnotation("kotlin.js.JsName")
-        jsNameSymbols.forEach { symbol ->
-            val jsNameAnnotation = symbol.annotations.firstOrNull { annotation ->
-                annotation.annotationType.resolve().declaration.qualifiedName?.asString() == "kotlin.js.JsName"
-            } ?: return@forEach
-
-            val nameArgument = jsNameAnnotation.arguments.firstOrNull { argument ->
-                argument.name?.asString() == "name"
-            }
-            val jsName = nameArgument?.value as? String ?: return@forEach
-            if (symbol !is KSDeclaration) return@forEach
-            typeMapping[symbol.simpleName.asString()] = jsName
         }
         return emptyList()
     }
 
+    private fun processClassDeclarationTransitively(decl: KSClassDeclaration) {
+        val className = decl.simpleName.asString()
+        if (kDocMap.contains(className)) return
+
+        val modifiedClassName = getModifiedName(decl, className)
+        decl.docString?.let {
+            kDocMap[modifiedClassName] = it
+        }
+        decl.getDeclaredProperties().forEach { prop ->
+            processPropertyDeclaration(prop, modifiedClassName)
+        }
+        decl.getDeclaredFunctions().forEach { function ->
+            processFunctionDeclaration(function, modifiedClassName)
+        }
+    }
+
+    private fun processFunctionDeclaration(function: KSFunctionDeclaration, className: String?) {
+        if (function.annotations.any { it.shortName.asString() == "Ignore" }) return
+        val modifiedFunctionName = getModifiedName(function, function.simpleName.asString())
+        val key = "${className?.plus(".") ?: ""}$modifiedFunctionName"
+        if (kDocMap.contains(key)) return
+        function.docString?.let { kdoc ->
+            kDocMap[key] = kdoc
+        }
+    }
+
+    private fun processPropertyDeclaration(prop: KSPropertyDeclaration, className: String?) {
+        if (prop.annotations.any { it.shortName.asString() == "Ignore" }) return
+        val modifiedPropName = getModifiedName(prop, prop.simpleName.asString())
+        val key = "${className?.plus(".") ?: ""}$modifiedPropName"
+        if (kDocMap.contains(key)) return
+        prop.docString?.let { kdoc ->
+            kDocMap["${className?.plus(".") ?: ""}$modifiedPropName"] = kdoc
+        }
+    }
+
+    private fun getModifiedName(decl: KSDeclaration, originalName: String): String {
+        val jsNameAnnotation = decl.annotations.firstOrNull { annotation ->
+            annotation.annotationType.resolve().declaration.qualifiedName?.asString() == "kotlin.js.JsName"
+        } ?: return originalName
+
+        val nameArgument = jsNameAnnotation.arguments.firstOrNull { argument ->
+            argument.name?.asString() == "name"
+        }
+        val jsName = nameArgument?.value as? String ?: return originalName
+        return jsName
+    }
+
     override fun finish() {
-        if (kDocMap.isEmpty()) return
         kDocMap.forEach { (type, kDocString) ->
             val tsDoc = processKDoc(kDocString)
-            if(typeMapping.contains(type)) {
+            if (typeMapping.contains(type)) {
                 kDocMap[typeMapping[type]!!] = tsDoc
                 kDocMap.remove(type)
             } else kDocMap[type] = tsDoc
@@ -105,13 +124,13 @@ class KDocExtractor(
         }
     }
 
-    private fun processKDoc(kDocString: String) : String {
+    private fun processKDoc(kDocString: String): String {
         var tsDoc = kDocString
         typeMapping.forEach { (kotlin, typeScript) ->
             tsDoc = tsDoc.replace("[$kotlin]", "[$typeScript]")
         }
-        tsDoc = tsDoc.lines().joinToString { it.trim()+"\n * " }
-        tsDoc = "/**\n$tsDoc/"
+        tsDoc = tsDoc.lines().joinToString("\n * ")
+        tsDoc = "/**\n ${tsDoc.trim()}/\n"
         return tsDoc
     }
 
