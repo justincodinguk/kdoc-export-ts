@@ -36,7 +36,7 @@ class TsDocExportPlugin : Plugin<Project> {
             }
         }
 
-        val sourceConfigurations = listOf("commonMainImplementation", "commonMainApi")
+        val sourceConfigurations = listOf("commonMainImplementation", "commonMainApi", "jsMainImplementation", "jsMainApi")
         sourceConfigurations.forEach { sourceName ->
             target.configurations.matching { it.name == sourceName }.configureEach {
                 dependencies.configureEach {
