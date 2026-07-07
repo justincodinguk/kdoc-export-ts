@@ -1,6 +1,6 @@
 plugins {
     kotlin("jvm")
-    `kotlin-dsl`
+    `maven-publish`
 }
 
 group = "dev.justincodinguk.safeexports"
@@ -12,7 +12,6 @@ repositories {
 }
 
 dependencies {
-    implementation("com.google.devtools.ksp:symbol-processing-api:2.3.0")
     testImplementation(kotlin("test"))
 }
 
@@ -24,11 +23,10 @@ tasks.test {
     useJUnitPlatform()
 }
 
-gradlePlugin {
-    plugins {
-        register("kdoc-export-ts") {
-            id = "dev.justincodinguk.safeexports.kdoc-export-ts"
-            implementationClass = "dev.justincodinguk.safeexports.kdoc.TsDocExportPlugin"
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
         }
     }
 }
