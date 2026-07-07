@@ -41,6 +41,6 @@ bin/
 
 ### VS Code ###
 .vscode/
-
+central.sonatype.properties
 ### Mac OS ###
 .DS_Store
