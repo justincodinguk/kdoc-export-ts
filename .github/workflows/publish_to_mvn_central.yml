@@ -15,10 +15,6 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
           cache: 'gradle'
-      - name: Create Sonatype Properties
-        run: |
-          echo "${{ secrets.CENTRAL_SONATYPE_PROPERTIES }}" > central.sonatype.properties
-
       - name: Extract GPG key
         run: |
           mkdir .gpg
@@ -28,4 +24,10 @@ jobs:
         run: chmod +x gradlew
 
       - name: Publish to Maven Central
-        run: ./gradlew :core:publishToMavenCentral :gradle-plugin:publishToMavenCentral --no-configuration-cache
+        run: |
+          ./gradlew :core:publishToMavenCentral :gradle-plugin:publishToMavenCentral --no-configuration-cache\
+            -PmavenCentralUsername="${{ secrets.MVN_USER }}" \
+            -PmavenCentralPassword="${{ secrets.MVM_PASS }}" \
+            -Psigning.keyId="${{ secrets.KEY_ID }}"
+            -Psigning.password="${{ secrets.KEY_PASSWORD }}
+            -Psigning.secretKeyRingFile=${{ secrets.KEY_PATH }}
