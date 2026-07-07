@@ -25,6 +25,7 @@ java {
 
 sonatypeProperties.forEach { (key, value) ->
     project.extensions.extraProperties[key as String] = value
+    println("$key loaded")
 }
 
 repositories {
