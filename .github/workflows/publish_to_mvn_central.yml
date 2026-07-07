@@ -28,6 +28,6 @@ jobs:
           ./gradlew :core:publishToMavenCentral :gradle-plugin:publishToMavenCentral --no-configuration-cache\
             -PmavenCentralUsername="${{ secrets.MVN_USER }}" \
             -PmavenCentralPassword="${{ secrets.MVM_PASS }}" \
-            -Psigning.keyId="${{ secrets.KEY_ID }}"
-            -Psigning.password="${{ secrets.KEY_PASSWORD }}
+            -Psigning.keyId="${{ secrets.KEY_ID }}" \
+            -Psigning.password="${{ secrets.KEY_PASSWORD }} \
             -Psigning.secretKeyRingFile=${{ secrets.KEY_PATH }}

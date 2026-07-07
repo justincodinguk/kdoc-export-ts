@@ -1,3 +1,6 @@
+import java.util.Properties
+import kotlin.apply
+
 plugins {
     `kotlin-dsl`
     id("com.vanniktech.maven.publish")
@@ -5,6 +8,17 @@ plugins {
 
 group = "io.github.justincodinguk.safeexports.kdoc-export-ts"
 version = "1.0.0"
+
+val sonatypeProperties = Properties().apply {
+    val file = rootProject.file("central.sonatype.properties")
+    if(file.exists()) {
+        file.inputStream().use { load(it) }
+    }
+}
+
+sonatypeProperties.forEach { (key, value) ->
+    project.extensions.extraProperties[key as String] = value
+}
 
 repositories {
     mavenCentral()
