@@ -67,23 +67,27 @@ class KDocExtractor(
     }
 
     private fun processFunctionDeclaration(function: KSFunctionDeclaration, className: String?) {
-        if (function.annotations.any { it.shortName.asString() == "Ignore" }) return
+        if(!function.shouldProcess(className)) return
         val modifiedFunctionName = getModifiedName(function, function.simpleName.asString())
         val key = "${className?.plus(".") ?: ""}$modifiedFunctionName"
-        if (kDocMap.contains(key)) return
         function.docString?.let { kdoc ->
             kDocMap[key] = kdoc
         }
     }
 
     private fun processPropertyDeclaration(prop: KSPropertyDeclaration, className: String?) {
-        if (prop.annotations.any { it.shortName.asString() == "Ignore" }) return
+        if(!prop.shouldProcess(className)) return
         val modifiedPropName = getModifiedName(prop, prop.simpleName.asString())
-        val key = "${className?.plus(".") ?: ""}$modifiedPropName"
-        if (kDocMap.contains(key)) return
         prop.docString?.let { kdoc ->
             kDocMap["${className?.plus(".") ?: ""}$modifiedPropName"] = kdoc
         }
+    }
+
+    private fun KSDeclaration.shouldProcess(className: String?) : Boolean {
+        if (annotations.any { it.shortName.asString() == "Ignore" }) return false
+        val modifiedPropName = getModifiedName(this, simpleName.asString())
+        val key = "${className?.plus(".") ?: ""}$modifiedPropName"
+        return !kDocMap.contains(key)
     }
 
     private fun getModifiedName(decl: KSDeclaration, originalName: String): String {
