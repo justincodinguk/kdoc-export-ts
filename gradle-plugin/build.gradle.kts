@@ -1,9 +1,9 @@
 plugins {
     `kotlin-dsl`
-    `maven-publish`
+    id("com.vanniktech.maven.publish")
 }
 
-group = "dev.justincodinguk.safeexports"
+group = "io.github.justincodinguk.safeexports.kdoc-export-ts"
 version = "1.0.0"
 
 repositories {
@@ -26,8 +26,38 @@ tasks.test {
 gradlePlugin {
     plugins {
         register("kdoc-export-ts") {
-            id = "dev.justincodinguk.safeexports.kdoc-export-ts"
+            id = "io.github.justincodinguk.safeexports.kdoc-export-ts"
             implementationClass = "TsDocExportPlugin"
+        }
+    }
+}
+
+mavenPublishing {
+    publishToMavenCentral()
+    signAllPublications()
+
+    pom {
+        name.set("SafeExports Kotlin/JS KDoc Embedder")
+        description.set("A Gradle plugin to embed KDocs into generated TypeScript definitions")
+        url.set("https://github.com/justincodinguk/kdoc-export-ts")
+
+        licenses {
+            license {
+                name.set("The Apache License, Version 2.0")
+                url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+            }
+        }
+        developers {
+            developer {
+                id.set("justincodinguk")
+                name.set("Justin")
+                email.set("coderstudent09@gmail.com")
+            }
+        }
+        scm {
+            connection.set("scm:git:git://github.com/justincodinguk/kdoc-export-ts.git")
+            developerConnection.set("scm:git:ssh://github.com/justincodinguk/kdoc-export-ts.git")
+            url.set("https://github.com/justincodinguk/kdoc-export-ts.git")
         }
     }
 }

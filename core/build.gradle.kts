@@ -1,4 +1,4 @@
-import com.vanniktech.maven.publish.SonatypeHost
+import com.vanniktech.maven.publish.portal.SonatypeCentralPortal
 import java.util.Properties
 
 plugins {
@@ -46,13 +46,13 @@ tasks.test {
 }
 
 mavenPublishing {
-    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    publishToMavenCentral()
     signAllPublications()
 
     coordinates(group.toString(), projectArtifactId, version.toString())
     pom {
-        name.set("SafeExports Kotlin/JS KDoc Embedder")
-        description.set("A Gradle plugin which embeds your KDoc inside the generated typescript bindings")
+        name.set("SafeExports Kotlin/JS KDoc Extractor")
+        description.set("KSP Symbol Processor for extracting KDocs")
         url.set("https://github.com/justincodinguk/kdoc-export-ts")
 
         licenses {

@@ -1,0 +1,31 @@
+name: publish_to_mvn_central.yml
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+      - name: Create Sonatype Properties
+        run: |
+          echo "${{ secrets.CENTRAL_SONATYPE_PROPERTIES }}" > central.sonatype.properties
+
+      - name: Extract GPG key
+        run: |
+          mkdir .gpg
+          echo "${{ secrets.GPG_B64 }}" | base64 --decode > .gpg/secring.gpg
+
+      - name: Permission to execute gradlew
+        run: chmod +x gradlew
+
+      - name: Publish to Maven Central
+        run: ./gradlew :core:publishToMavenCentral :gradle-plugin:publishToMavenCentral --no-configuration-cache
