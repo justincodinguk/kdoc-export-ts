@@ -1,5 +1,6 @@
 import com.vanniktech.maven.publish.portal.SonatypeCentralPortal
 import java.util.Properties
+import kotlin.math.log
 
 plugins {
     kotlin("jvm")
@@ -22,10 +23,9 @@ java {
     withSourcesJar()
     withJavadocJar()
 }
-
+logger.warn("sonatype: ${sonatypeProperties.keys.joinToString(", ")}")
 sonatypeProperties.forEach { (key, value) ->
     project.extensions.extraProperties[key as String] = value
-    println("$key loaded")
 }
 
 repositories {
