@@ -3,3 +3,4 @@ plugins {
 }
 rootProject.name = "kdoc-export-ts"
 include("core")
+include("gradle-plugin")
